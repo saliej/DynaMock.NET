@@ -210,7 +210,8 @@ public class MockableGenerator : IIncrementalGenerator
 
     private static bool IsRegularMethod(IMethodSymbol methodSymbol)
     {
-        return methodSymbol.MethodKind is MethodKind.Ordinary or MethodKind.ExplicitInterfaceImplementation;
+        return methodSymbol.MethodKind == MethodKind.Ordinary ||
+               methodSymbol.MethodKind == MethodKind.ExplicitInterfaceImplementation;
     }
 
     private static MethodModel BuildMethodModel(IMethodSymbol methodSymbol)
@@ -246,7 +247,8 @@ public class MockableGenerator : IIncrementalGenerator
     {
         var returnType = methodSymbol.ReturnType;
         return returnType.Name is "Task" or "ValueTask" ||
-               returnType is INamedTypeSymbol { IsGenericType: true, ConstructedFrom.Name: "Task" or "ValueTask" };
+               (returnType is INamedTypeSymbol { IsGenericType: true } namedType &&
+                namedType.ConstructedFrom.Name is "Task" or "ValueTask");
     }
 
     private static PropertyModel BuildPropertyModel(IPropertySymbol propertySymbol)

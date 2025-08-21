@@ -6,53 +6,53 @@ public abstract class MockableBase<T> where T : class
 {
     protected T _realImplementation;
     
-    private static readonly AsyncLocal<T?> _mock = new();
-    private static readonly AsyncLocal<MockConfiguration<T>?> _mockConfig = new();
+    private static T? _mock;
+    private static MockConfiguration<T>? _mockConfig = new();
     
     protected MockableBase(T realImplementation)
     {
         _realImplementation = realImplementation;
     }
     
-    protected static T? Mock => _mock.Value;
-    protected static MockConfiguration<T>? MockConfig => _mockConfig.Value;
+    protected static T? Mock => _mock;
+    protected static MockConfiguration<T>? MockConfig => _mockConfig;
     
     public static void SetMock(T? mockedService) =>
         SetMock(mockedService, null);
         
     public static void SetMock(T? mockedService, Action<MockConfiguration<T>>? configureOptions)
     {
-        _mock.Value = mockedService;
+        _mock = mockedService;
         
         if (configureOptions != null && mockedService != null)
         {
             var config = new MockConfiguration<T>();
             configureOptions(config);
-            _mockConfig.Value = config;
+            _mockConfig = config;
         }
         else
         {
-            _mockConfig.Value = null;
+            _mockConfig = null;
         }
     }
         
     public static void RemoveMock()
     {
-        _mock.Value = null;
-        _mockConfig.Value = null;
+        _mock = null;
+        _mockConfig = null;
     }
     
     public static IDisposable SetScopedMock(T? mockedService, Action<MockConfiguration<T>>? configureOptions = null)
     {
-        var previousMock = _mock.Value;
-        var previousConfig = _mockConfig.Value;
+        var previousMock = _mock;
+        var previousConfig = _mockConfig;
         
         SetMock(mockedService, configureOptions);
         
         return new MockScope(() =>
         {
-            _mock.Value = previousMock;
-            _mockConfig.Value = previousConfig;
+            _mock = previousMock;
+            _mockConfig = previousConfig;
         });
     }
     

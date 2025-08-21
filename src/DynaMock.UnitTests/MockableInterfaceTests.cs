@@ -8,6 +8,11 @@ namespace DynaMock.UnitTests;
 
 public class MockableInterfaceTests
 {
+    public MockableInterfaceTests()
+    {
+        MockableITestServiceDouble.RemoveMock();
+    }
+
     [Fact]
     public void Should_UseRealImplementation_WhenNoMockSet()
     {
