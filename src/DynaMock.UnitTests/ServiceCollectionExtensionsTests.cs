@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DynaMock.UnitTests;
 
-[DynaMock.Mockable(typeof(ITestService))]
+[Mockable(typeof(ITestService))]
 public class MockableTypes {}
 public class ServiceCollectionExtensionsTests
 {

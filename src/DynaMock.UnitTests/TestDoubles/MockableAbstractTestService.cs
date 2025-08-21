@@ -5,45 +5,50 @@ namespace DynaMock.UnitTests.TestDoubles;
 
 public class MockableAbstractTestServiceDouble : MockableBase<AbstractTestService>
 {
-    public MockableAbstractTestServiceDouble(AbstractTestService realImplementation) : base(realImplementation)
+    public MockableAbstractTestServiceDouble(AbstractTestService realImplementation, 
+		IMockProvider<AbstractTestService>? mockProvider = null) : base(realImplementation, mockProvider)
     {
     }
 
-    public string Name
-    {
-        get
-        {
-            if (ShouldUseMockForProperty("Name"))
-                return Mock.Name;
-            return _realImplementation.Name;
-        }
-        set
-        {
-            if (ShouldUseMockForProperty("Name"))
-                Mock.Name = value;
-            else
-                _realImplementation.Name = value;
-        }
-    }
+	public string Name
+	{
+		get
+		{
+			if (ShouldUseMockForProperty("Name"))
+				return MockProvider.Current.Name;
 
-    public string GetValue()
+			return RealImplementation.Name;
+		}
+		set
+		{
+			if (ShouldUseMockForProperty("Name"))
+				MockProvider.Current.Name = value;
+
+			RealImplementation.Name = value;
+		}
+	}
+
+	public string GetValue()
     {
         if (ShouldUseMockForMethod("GetValue"))
-            return Mock.GetValue();
-        return _realImplementation.GetValue();
+            return MockProvider.Current.GetValue();
+
+        return RealImplementation.GetValue();
     }
 
     public Task<int> GetCountAsync()
     {
         if (ShouldUseMockForMethod("GetCountAsync"))
-            return Mock.GetCountAsync();
-        return _realImplementation.GetCountAsync();
+            return MockProvider.Current.GetCountAsync();
+
+        return RealImplementation.GetCountAsync();
     }
 
     public string GetDefaultValue()
     {
         if (ShouldUseMockForMethod("GetDefaultValue"))
-            return Mock.GetDefaultValue();
-        return _realImplementation.GetDefaultValue();
+            return MockProvider.Current.GetDefaultValue();
+
+        return RealImplementation.GetDefaultValue();
     }
 }

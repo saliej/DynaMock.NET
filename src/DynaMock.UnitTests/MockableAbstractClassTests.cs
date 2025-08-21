@@ -10,7 +10,7 @@ public class MockableAbstractClassTests
 {
     public MockableAbstractClassTests()
     {
-        MockableAbstractTestServiceDouble.RemoveMock();
+        DefaultMockProvider<AbstractTestService>.RemoveMock();
     }
 
     [Fact]
@@ -40,8 +40,8 @@ public class MockableAbstractClassTests
         var mock = Substitute.For<AbstractTestService>();
         mock.GetValue().Returns("Mocked Value");
 
-        // Act
-        MockableAbstractTestServiceDouble.SetMock(mock);
+		// Act
+		DefaultMockProvider<AbstractTestService>.SetMock(mock);
         var result = mockable.GetValue();
 
         // Assert
@@ -61,8 +61,8 @@ public class MockableAbstractClassTests
         var mock = Substitute.For<AbstractTestService>();
         mock.GetDefaultValue().Returns("Mocked Default");
 
-        // Act
-        MockableAbstractTestServiceDouble.SetMock(mock);
+		// Act
+		DefaultMockProvider<AbstractTestService>.SetMock(mock);
         var result = mockable.GetDefaultValue();
 
         // Assert

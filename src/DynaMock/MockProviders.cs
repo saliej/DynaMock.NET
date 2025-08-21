@@ -1,41 +1,50 @@
 ﻿using System;
+using System.Security.Cryptography;
 
 namespace DynaMock;
 
-public interface IMockProvider<out T> { T? Current { get; } }
-
-public sealed class AsyncLocalMockProvider<T> : IMockProvider<T> where T : class
+public interface IMockProvider<T> where T : class
 {
-    private static readonly AsyncLocal<T?> _current = new();
-    
-    public T? Current => _current.Value;
-    
-    public static void Set(T? instance) => _current.Value = instance;
-    public static void Remove() => _current.Value = null;
+    T? Current { get; }
+	MockConfiguration<T>? MockConfig { get; }
 }
 
-public sealed class ScopedMockProvider<T> : IMockProvider<T>, IDisposable where T : class
-{
-    private T? _mock;
+//public sealed class AsyncLocalMockProvider<T> : IMockProvider<T> where T : class
+//{
+//    private static readonly AsyncLocal<T?> _current = new();
     
-    public T? Current => _mock;
-    
-    public void SetMock(T? mock) => _mock = mock;
-    public void Dispose() => _mock = null;
-}
+//    public T? Current => _current.Value;
 
-public sealed class AsyncLocalScopedMockProvider<T> : IMockProvider<T> where T : class
+//	public MockConfiguration<T>? MockConfig => _mockConfig;
+
+//	public static void Set(T? instance) => _current.Value = instance;
+//    public static void Remove() => _current.Value = null;
+//}
+
+public sealed class DefaultMockProvider<T> : IMockProvider<T> where T : class
 {
-    private static readonly AsyncLocal<T?> _current = new();
-    
-    public T? Current => _current.Value;
-    
-    public static void SetMock(T? instance) => _current.Value = instance;
-    public static void RemoveMock() => _current.Value = null;
-    
-    public static IDisposable SetScopedMock(T? instance)
+    private static T? _mock;
+	private static MockConfiguration<T>? _mockConfig;
+
+	public T? Current => _mock;
+
+	public MockConfiguration<T>? MockConfig => _mockConfig;
+
+	public static void SetMock(T? mock, Action<MockConfiguration<T>>? configureOptions = null)
     {
-        SetMock(instance);
-        return new MockScope(RemoveMock);
+        _mock = mock;
+
+        if (configureOptions != null && mock != null)
+        {
+	        var config = new MockConfiguration<T>();
+            configureOptions(config);
+            _mockConfig = config;
+        }
+        else
+        {
+	        _mockConfig = null;
+        }
     }
+
+	public static void RemoveMock() => SetMock(null);
 }
