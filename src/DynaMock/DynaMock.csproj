@@ -1,0 +1,60 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    
+    <!-- Package Information -->
+    <PackageId>DynaMock</PackageId>
+    <Version>0.1.0-alpha.2</Version>
+    <PackageVersion>0.1.0-alpha.2</PackageVersion>
+    <Authors>Salie Jakoet</Authors>
+    <Description>A source generator library for creating mockable wrappers around interfaces and abstract classes</Description>
+    <PackageTags>mocking;testing;source-generator;integration-testing</PackageTags>
+    <PackageProjectUrl>https://github.com/saliej/DynaMock.NET</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/saliej/DynaMock.NET</RepositoryUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    
+    <!-- Source Generator Support -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="bin\Debug\net9.0\\DynaMock.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../DynaMock.SourceGeneration/bin/$(Configuration)/netstandard2.0/DynaMock.SourceGeneration.dll" 
+          Pack="true" 
+          PackagePath="analyzers/dotnet/cs/DynaMock.SourceGeneration.dll" 
+          Visible="false" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Build the source generator before packing -->
+  <Target Name="BuildSourceGenerator" BeforeTargets="Pack">
+    <MSBuild Projects="../DynaMock.SourceGeneration/DynaMock.SourceGeneration.csproj" 
+             Properties="Configuration=$(Configuration)" />
+  </Target>
+</Project>
