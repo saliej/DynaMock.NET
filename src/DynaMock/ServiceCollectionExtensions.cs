@@ -35,9 +35,13 @@ public static class ServiceCollectionExtensions
                 "Ensure the type is marked with [Mockable] attribute and the source generator is properly configured.");
         }
 
-        // Remove existing registration
-        services.Remove(descriptor);
+		if (descriptor.ImplementationType is null)
+            throw new InvalidOperationException(
+                $"Service {typeof(T).Name} must be registered with an implementation type.");
 
+		// Remove existing registration
+		services.Remove(descriptor);
+                
         // Add new registration with mockable wrapper
         services.Add(new ServiceDescriptor(
             typeof(T),

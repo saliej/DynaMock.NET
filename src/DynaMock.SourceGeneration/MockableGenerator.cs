@@ -62,19 +62,26 @@ public class MockableGenerator : IIncrementalGenerator
 		DiagnosticSeverity.Warning,
 		isEnabledByDefault: true);
 
-	private static ImmutableArray<TypeToMock> GetTypesToMock(
-		GeneratorAttributeSyntaxContext context,
-		CancellationToken cancellationToken)
+	private static ImmutableArray<TypeToMock> GetTypesToMock(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		if (context.TargetSymbol is not INamedTypeSymbol)
+		if (context.TargetSymbol is not INamedTypeSymbol targetSymbol)
 			return ImmutableArray<TypeToMock>.Empty;
 
 		var attribute = context.Attributes
 			.FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == MockableAttributeFullName);
 
-		if (attribute is null) return ImmutableArray<TypeToMock>.Empty;
+		if (attribute is null)
+			return ImmutableArray<TypeToMock>.Empty;
 
-		// Extract VirtualMembers setting from attribute
+		var typesToMock = ImmutableArray.CreateBuilder<TypeToMock>();
+
+		// Handle constructor arguments
+		if (attribute.ConstructorArguments.Length == 0)
+		{
+			// Report diagnostic: attribute requires at least one type argument
+			return ImmutableArray<TypeToMock>.Empty;
+		}
+
 		bool virtualMembers = false;
 		foreach (var namedArg in attribute.NamedArguments)
 		{
@@ -85,35 +92,21 @@ public class MockableGenerator : IIncrementalGenerator
 			}
 		}
 
-		var typesToMock = ImmutableArray.CreateBuilder<TypeToMock>();
+		var firstArg = attribute.ConstructorArguments[0];
 
-		// Handle constructor arguments - support both single Type and params Type[]
-		if (attribute.ConstructorArguments.Length > 0)
+		if (firstArg.Kind == TypedConstantKind.Array)
 		{
-			var firstArg = attribute.ConstructorArguments[0];
-
-			if (firstArg.Kind == TypedConstantKind.Array)
+			foreach (var value in firstArg.Values)
 			{
-				// params Type[] case
-				foreach (var value in firstArg.Values)
+				if (value.Value is INamedTypeSymbol namedType)
 				{
-					if (value.Value is INamedTypeSymbol namedType)
-					{
-						typesToMock.Add(new TypeToMock(
-							namedType,
-							context.TargetNode.GetLocation(),
-							virtualMembers));
-					}
+					typesToMock.Add(new TypeToMock(namedType, context.TargetNode.GetLocation(), virtualMembers));
 				}
 			}
-			else if (firstArg.Value is INamedTypeSymbol singleType)
-			{
-				// Single Type case
-				typesToMock.Add(new TypeToMock(
-					singleType,
-					context.TargetNode.GetLocation(),
-					virtualMembers));
-			}
+		}
+		else if (firstArg.Value is INamedTypeSymbol singleType)
+		{
+			typesToMock.Add(new TypeToMock(singleType, context.TargetNode.GetLocation(), virtualMembers));
 		}
 
 		return typesToMock.ToImmutable();
@@ -194,10 +187,18 @@ public class MockableGenerator : IIncrementalGenerator
 
 	private static TypeModel BuildTypeModel(INamedTypeSymbol typeSymbol)
 	{
+		if (typeSymbol is null)
+			throw new ArgumentNullException(nameof(typeSymbol));
+
+		var containingNamespace = typeSymbol.ContainingNamespace;
+		var namespaceString = containingNamespace?.IsGlobalNamespace == false
+			? containingNamespace.ToDisplayString()
+			: string.Empty;
+
 		var model = new TypeModel
 		{
 			Name = typeSymbol.Name,
-			Namespace = typeSymbol.ContainingNamespace.ToDisplayString(),
+			Namespace = namespaceString,
 			IsInterface = typeSymbol.TypeKind == TypeKind.Interface,
 			GenericTypeParameters = typeSymbol.TypeParameters.Select(tp => tp.Name).ToList(),
 			GenericTypeConstraints = typeSymbol.TypeParameters
@@ -208,17 +209,25 @@ public class MockableGenerator : IIncrementalGenerator
 
 		foreach (var member in typeSymbol.GetMembers())
 		{
-			switch (member)
+			try
 			{
-				case IMethodSymbol methodSymbol when IsRegularMethod(methodSymbol):
-					model.Methods.Add(BuildMethodModel(methodSymbol));
-					break;
-				case IPropertySymbol propertySymbol:
-					model.Properties.Add(BuildPropertyModel(propertySymbol));
-					break;
-				case IEventSymbol eventSymbol:
-					model.Events.Add(BuildEventModel(eventSymbol));
-					break;
+				switch (member)
+				{
+					case IMethodSymbol methodSymbol when IsRegularMethod(methodSymbol):
+						model.Methods.Add(BuildMethodModel(methodSymbol));
+						break;
+					case IPropertySymbol propertySymbol:
+						model.Properties.Add(BuildPropertyModel(propertySymbol));
+						break;
+					case IEventSymbol eventSymbol:
+						model.Events.Add(BuildEventModel(eventSymbol));
+						break;
+				}
+			}
+			catch
+			{
+				// Skip problematic members rather than failing entire generation
+				continue;
 			}
 		}
 
@@ -233,6 +242,9 @@ public class MockableGenerator : IIncrementalGenerator
 
 	private static MethodModel BuildMethodModel(IMethodSymbol methodSymbol)
 	{
+		if (methodSymbol is null)
+			throw new ArgumentNullException(nameof(methodSymbol));
+
 		var baseImplementation = !methodSymbol.IsAbstract && !methodSymbol.IsVirtual
 			? $"base.{methodSymbol.Name}({string.Join(", ", methodSymbol.Parameters.Select(p => p.Name))})"
 			: null;
@@ -240,9 +252,9 @@ public class MockableGenerator : IIncrementalGenerator
 		return new MethodModel
 		{
 			Name = methodSymbol.Name,
-			ReturnType = methodSymbol.ReturnType.ToDisplayString(),
+			ReturnType = methodSymbol.ReturnType?.ToDisplayString() ?? "void",
 			Parameters = methodSymbol.Parameters
-				.Select(p => (p.Type.ToDisplayString(), p.Name))
+				.Select(p => (p.Type?.ToDisplayString() ?? "object", p.Name ?? "arg"))
 				.ToList(),
 			IsAsync = IsAsyncMethod(methodSymbol),
 			IsVirtual = methodSymbol.IsVirtual,
@@ -256,7 +268,7 @@ public class MockableGenerator : IIncrementalGenerator
 				.Where(c => !string.IsNullOrEmpty(c))
 				.ToList(),
 			HasImplementation = !methodSymbol.IsAbstract &&
-							   methodSymbol.ContainingType.TypeKind != TypeKind.Interface
+							   methodSymbol.ContainingType?.TypeKind != TypeKind.Interface
 		};
 	}
 
@@ -270,10 +282,13 @@ public class MockableGenerator : IIncrementalGenerator
 
 	private static PropertyModel BuildPropertyModel(IPropertySymbol propertySymbol)
 	{
+		if (propertySymbol is null)
+			throw new ArgumentNullException(nameof(propertySymbol));
+
 		return new PropertyModel
 		{
 			Name = propertySymbol.Name,
-			Type = propertySymbol.Type.ToDisplayString(),
+			Type = propertySymbol.Type?.ToDisplayString() ?? "object",
 			HasGetter = propertySymbol.GetMethod != null,
 			HasSetter = propertySymbol.SetMethod != null,
 			IsVirtual = propertySymbol.IsVirtual,
@@ -293,10 +308,13 @@ public class MockableGenerator : IIncrementalGenerator
 
 	private static EventModel BuildEventModel(IEventSymbol eventSymbol)
 	{
+		if (eventSymbol is null)
+			throw new ArgumentNullException(nameof(eventSymbol));
+
 		return new EventModel
 		{
 			Name = eventSymbol.Name,
-			Type = eventSymbol.Type.ToDisplayString(),
+			Type = eventSymbol.Type?.ToDisplayString() ?? "EventHandler",
 			IsVirtual = eventSymbol.IsVirtual,
 			IsAbstract = eventSymbol.IsAbstract
 		};
@@ -304,6 +322,9 @@ public class MockableGenerator : IIncrementalGenerator
 
 	private static string GetTypeParameterConstraints(ITypeParameterSymbol typeParameter)
 	{
+		if (typeParameter is null)
+			return string.Empty;
+
 		var constraints = new List<string>();
 
 		if (typeParameter.HasReferenceTypeConstraint)
@@ -318,7 +339,7 @@ public class MockableGenerator : IIncrementalGenerator
 			constraints.Add("new()");
 
 		constraints.AddRange(typeParameter.ConstraintTypes
-			.Where(t => t.TypeKind != TypeKind.Error)
+			.Where(t => t?.TypeKind != TypeKind.Error)
 			.Select(t => t.ToDisplayString()));
 
 		return constraints.Any()

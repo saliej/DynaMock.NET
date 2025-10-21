@@ -10,7 +10,8 @@ public abstract class MockableBase<T> where T : class
 
 	protected MockableBase(T realImplementation, IMockProvider<T>? mockProvider)
 	{
-		RealImplementation = realImplementation;
+		RealImplementation = realImplementation ?? throw new ArgumentNullException(nameof(realImplementation));
+
 		MockProvider = mockProvider ?? new DefaultMockProvider<T>();
 	}
 

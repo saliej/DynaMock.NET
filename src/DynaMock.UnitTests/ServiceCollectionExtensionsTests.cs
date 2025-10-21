@@ -1,6 +1,6 @@
 ﻿using System;
 using DynaMock.UnitTests.TestServices;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 

@@ -57,13 +57,45 @@ public class MockableAdvancedWeatherService : MockableBase<IAdvancedWeatherServi
 
 	public event EventHandler<string> WeatherChanged
 	{
-		add => Implementation.WeatherChanged += value;
-		remove => Implementation.WeatherChanged -= value;
+		add
+		{
+			if (ShouldUseMockForEvent("WeatherChanged"))
+			{
+				MockProvider.Current.WeatherChanged += value;
+				return;
+			}
+			RealImplementation.WeatherChanged += value;
+		}
+		remove
+		{
+			if (ShouldUseMockForEvent("WeatherChanged"))
+			{
+				MockProvider.Current.WeatherChanged -= value;
+				return;
+			}
+			RealImplementation.WeatherChanged -= value;
+		}
 	}
 
 	public event EventHandler ServiceStatusChanged
 	{
-		add => Implementation.ServiceStatusChanged += value;
-		remove => Implementation.ServiceStatusChanged -= value;
+		add
+		{
+			if (ShouldUseMockForEvent("ServiceStatusChanged"))
+			{
+				MockProvider.Current.ServiceStatusChanged += value;
+				return;
+			}
+			RealImplementation.ServiceStatusChanged += value;
+		}
+		remove
+		{
+			if (ShouldUseMockForEvent("ServiceStatusChanged"))
+			{
+				MockProvider.Current.ServiceStatusChanged -= value;
+				return;
+			}
+			RealImplementation.ServiceStatusChanged -= value;
+		}
 	}
 }

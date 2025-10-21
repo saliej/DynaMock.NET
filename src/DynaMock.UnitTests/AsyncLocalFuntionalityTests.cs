@@ -1,7 +1,7 @@
 ﻿using System;
 using DynaMock.UnitTests.TestServices;
 using DynaMock.UnitTests.TestDoubles;
-using FluentAssertions;
+using AwesomeAssertions;
 using NSubstitute;
 
 namespace DynaMock.UnitTests;
