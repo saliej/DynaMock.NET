@@ -9,6 +9,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynaMock.UnitTests", "src\D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynaMock.SourceGeneration", "src\DynaMock.SourceGeneration\DynaMock.SourceGeneration.csproj", "{DF879C21-D9C9-47B3-8657-384533A3A791}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoWebApp", "src\Demos\DemoWebApp\DemoWebApp.csproj", "{106E8C58-8C50-4DCB-9E75-38BA62950C94}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demo", "Demo", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoWebApp.IntegrationTests", "src\Demos\DemoWebApp.IntegrationTests\DemoWebApp.IntegrationTests.csproj", "{4192FB80-4CE2-4143-A78F-8E913F727BD9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,8 +33,23 @@ Global
 		{DF879C21-D9C9-47B3-8657-384533A3A791}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF879C21-D9C9-47B3-8657-384533A3A791}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF879C21-D9C9-47B3-8657-384533A3A791}.Release|Any CPU.Build.0 = Release|Any CPU
+		{106E8C58-8C50-4DCB-9E75-38BA62950C94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{106E8C58-8C50-4DCB-9E75-38BA62950C94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{106E8C58-8C50-4DCB-9E75-38BA62950C94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{106E8C58-8C50-4DCB-9E75-38BA62950C94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4192FB80-4CE2-4143-A78F-8E913F727BD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4192FB80-4CE2-4143-A78F-8E913F727BD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4192FB80-4CE2-4143-A78F-8E913F727BD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4192FB80-4CE2-4143-A78F-8E913F727BD9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{106E8C58-8C50-4DCB-9E75-38BA62950C94} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{4192FB80-4CE2-4143-A78F-8E913F727BD9} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {35457F3C-5211-48D2-B2C9-1F669B2751FE}
 	EndGlobalSection
 EndGlobal
