@@ -2,7 +2,7 @@ using System;
 
 namespace DynaMock.SourceGeneration.Models;
 
-internal class PropertyModel
+public class PropertyModel
 {
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;

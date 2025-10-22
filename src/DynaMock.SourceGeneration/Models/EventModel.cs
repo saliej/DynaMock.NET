@@ -2,7 +2,7 @@
 
 namespace DynaMock.SourceGeneration.Models;
 
-internal class EventModel
+public class EventModel
 {
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DynaMock.SourceGeneration.Models;
 
-internal class MethodModel
+public class MethodModel
 {
     public string Name { get; set; } = string.Empty;
     public string ReturnType { get; set; } = string.Empty;

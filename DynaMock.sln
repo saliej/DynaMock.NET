@@ -15,6 +15,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demo", "Demo", "{02EA681E-C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoWebApp.IntegrationTests", "src\Demos\DemoWebApp.IntegrationTests\DemoWebApp.IntegrationTests.csproj", "{4192FB80-4CE2-4143-A78F-8E913F727BD9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{24BB7917-C94B-400A-A38B-FFECDA469360}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynaMock.SourceGeneration.UnitTests", "DynaMock.SourceGeneration.UnitTests\DynaMock.SourceGeneration.UnitTests.csproj", "{214EDA9D-6C58-4AFE-B05D-2FC7782F3B92}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,13 +45,19 @@ Global
 		{4192FB80-4CE2-4143-A78F-8E913F727BD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4192FB80-4CE2-4143-A78F-8E913F727BD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4192FB80-4CE2-4143-A78F-8E913F727BD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{214EDA9D-6C58-4AFE-B05D-2FC7782F3B92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{214EDA9D-6C58-4AFE-B05D-2FC7782F3B92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{214EDA9D-6C58-4AFE-B05D-2FC7782F3B92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{214EDA9D-6C58-4AFE-B05D-2FC7782F3B92}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{0FD007CA-9D94-4FFD-89AE-BF06090C7ACF} = {24BB7917-C94B-400A-A38B-FFECDA469360}
 		{106E8C58-8C50-4DCB-9E75-38BA62950C94} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{4192FB80-4CE2-4143-A78F-8E913F727BD9} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{214EDA9D-6C58-4AFE-B05D-2FC7782F3B92} = {24BB7917-C94B-400A-A38B-FFECDA469360}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {35457F3C-5211-48D2-B2C9-1F669B2751FE}
