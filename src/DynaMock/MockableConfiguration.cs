@@ -108,6 +108,6 @@ public class MockConfiguration<T> where T : class
     public bool IsPropertyMocked(string propertyName) => _mockedProperties.Contains(propertyName);
     public bool IsEventMocked(string eventName) => _mockedEvents.Contains(eventName);
 
-    public bool TryGetTypeForCall(string methodName, out Type? targetType) =>
+    public bool TryGetTypeForMethod(string methodName, out Type? targetType) =>
         _targetTypeCallMap.TryGetValue(methodName, out targetType);
 }

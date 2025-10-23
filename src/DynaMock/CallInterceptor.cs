@@ -53,7 +53,7 @@ public class CallInterceptor<T> where T : class
     
         if (_mockProvider.MockConfig?.IsMethodMockedWithArgs(memberName, args) == true)
         {
-            if (_mockProvider.MockConfig.TryGetTypeForCall(memberName, out var targetType))
+            if (_mockProvider.MockConfig.TryGetTypeForMethod(memberName, out var targetType))
             {
                 return InvokeOnTargetType(methodExpression, 
                     _mockProvider.Current, 
