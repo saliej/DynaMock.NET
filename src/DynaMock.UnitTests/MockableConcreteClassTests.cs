@@ -1,10 +1,43 @@
-﻿//using System;
-//using DynaMock.UnitTests.TestServices;
+﻿using System;
+using DynaMock.UnitTests.TestServices;
 //using DynaMock.UnitTests.TestDoubles;
-//using AwesomeAssertions;
-//using NSubstitute;
+using DynaMock.Generated;
+using AwesomeAssertions;
+using NSubstitute;
 
-//namespace DynaMock.UnitTests;
+namespace DynaMock.UnitTests;
+
+public class MockableConcreteClassTests
+{
+    public class DummyConcreteService : ConcreteService
+    {
+        public new string GetValue()
+        {
+            return "DummyValue";
+        }
+
+        public new int Add(int first, int second)
+        {
+            return -4;
+        }
+    }
+
+    [Fact]
+    public void Should_UseRealImplementation_WhenNoMockSet()
+    {
+        // Arrange
+        var realImpl = new ConcreteService();
+        var mockable = new MockableConcreteService(realImpl);
+
+        var mock = new DummyConcreteService();
+        DefaultMockProvider<ConcreteService>.SetMock(mock, config => config
+            .MockMethod(x => x.Add(3, 5), mock));
+        
+        // Act
+        mockable.Add(1, 3).Should().Be(4);
+        mockable.Add(3, 5).Should().Be(-4);
+    }
+}
 
 //[Collection("Mock Isolation")]
 //public class MockableConcreteClassTests

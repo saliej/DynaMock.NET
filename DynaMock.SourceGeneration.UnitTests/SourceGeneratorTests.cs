@@ -586,19 +586,100 @@ namespace TestNamespace
 {
     public class ConcreteService
     {
-        public virtual string GetValue() => ""value"";
-        public virtual int Count { get; set; }
+        public string GetValue() => ""value"";
+        public int Add(int first, int second) => first + second;
+        public int Count { get; set; }
     }
 
     [Mockable(typeof(ConcreteService))]
     public class MockableTypes { }
 }";
+        var expectedBase = @"using System;
+using DynaMock;
+using TestNamespace;
+
+namespace DynaMock.Generated
+{
+    public abstract class MockableConcreteServiceBase : ConcreteService
+    {
+        protected readonly ConcreteService RealImplementation;
+        protected readonly IMockProvider<ConcreteService> MockProvider;
+        protected readonly CallInterceptor<ConcreteService> Interceptor;
+
+        protected MockableConcreteServiceBase(ConcreteService realImplementation, IMockProvider<ConcreteService>? mockProvider)
+            : base()
+        {
+            RealImplementation = realImplementation ?? throw new ArgumentNullException(nameof(realImplementation));
+            MockProvider = mockProvider ?? new DefaultMockProvider<ConcreteService>();
+            Interceptor = new CallInterceptor<ConcreteService>(MockProvider, RealImplementation);
+        }
+
+        protected ConcreteService Implementation => MockProvider.Current ?? RealImplementation;
+
+        public ConcreteService GetRealImplementation() => RealImplementation;
+    }
+}
+".ReplaceLineEndings("\n");
+
+        var expectedImpl = @"using System;
+using System.Threading;
+using System.Threading.Tasks;
+using DynaMock;
+using TestNamespace;
+
+namespace DynaMock.Generated
+{
+    public class MockableConcreteService : MockableConcreteServiceBase
+    {
+        public MockableConcreteService(ConcreteService realImplementation)
+            : this(realImplementation, null)
+        {
+        }
+
+        public MockableConcreteService(ConcreteService realImplementation, IMockProvider<ConcreteService>? mockProvider)
+            : base(realImplementation, mockProvider)
+        {
+        }
+
+        public override string GetValue()
+        {
+            return Interceptor.InterceptMethod(
+                x => x.GetValue(),
+                impl => impl.GetValue(),
+                Array.Empty<object?>());
+        }
+
+        public override int Count
+        {
+            get
+            {
+                return Interceptor.InterceptPropertyGet(
+                    x => x.Count,
+                    impl => impl.Count);
+            }
+            set
+            {
+                Interceptor.InterceptPropertySet(
+                    x => x.Count,
+                    impl => impl.Count = value,
+                    value);
+            }
+        }
+
+    }
+}
+".ReplaceLineEndings("\n");
 
         await new SourceGeneratorTest
         {
             TestState =
             {
-                Sources = { source }
+                Sources = { source },
+                GeneratedSources =
+                {
+                (typeof(MockableGenerator), "MockableConcreteServiceBase.g.cs", expectedBase),
+                (typeof(MockableGenerator), "MockableConcreteService.g.cs", expectedImpl)
+            }
             }
         }.RunAsync();
     }

@@ -47,7 +47,7 @@ public class BaseClassCodeGenerator
 			: "";
 
 		// Key: Inherit from T if it's a class, nothing if interface
-		string baseClass = "";
+		var baseClass = "";
 		if (!model.IsInterface)
 		{
 			baseClass = $" : {model.Name}{genericParams}";
@@ -67,60 +67,31 @@ public class BaseClassCodeGenerator
 		builder.AppendLine("    }");
 	}
 
-	private void GenerateFields(StringBuilder builder, TypeModel model, string genericParams)
-	{
-		builder.AppendLine($"        protected readonly {model.Name}{genericParams} RealImplementation;");
-		builder.AppendLine($"        protected readonly IMockProvider<{model.Name}{genericParams}> MockProvider;");
-		builder.AppendLine();
-	}
+    private void GenerateFields(StringBuilder builder, TypeModel model, string genericParams)
+    {
+        builder.AppendLine($"        protected readonly {model.Name}{genericParams} RealImplementation;");
+        builder.AppendLine($"        protected readonly IMockProvider<{model.Name}{genericParams}> MockProvider;");
+        builder.AppendLine($"        protected readonly CallInterceptor<{model.Name}{genericParams}> Interceptor;");
+        builder.AppendLine();
+    }
 
-	private void GenerateConstructor(StringBuilder builder, TypeModel model, string genericParams)
-	{
-		var baseCall = model.IsInterface ? "" : "\n            : base()";
+    private void GenerateConstructor(StringBuilder builder, TypeModel model, string genericParams)
+    {
+        var baseCall = model.IsInterface ? "" : "\n            : base()";
+    
+        builder.AppendLine($"        protected Mockable{model.Name}Base({model.Name}{genericParams} realImplementation, IMockProvider<{model.Name}{genericParams}>? mockProvider){baseCall}");
+        builder.AppendLine("        {");
+        builder.AppendLine("            RealImplementation = realImplementation ?? throw new ArgumentNullException(nameof(realImplementation));");
+        builder.AppendLine($"            MockProvider = mockProvider ?? new DefaultMockProvider<{model.Name}{genericParams}>();");
+        builder.AppendLine($"            Interceptor = new CallInterceptor<{model.Name}{genericParams}>(MockProvider, RealImplementation);");
+        builder.AppendLine("        }");
+        builder.AppendLine();
+    }
 
-		builder.AppendLine($"        protected Mockable{model.Name}Base({model.Name}{genericParams} realImplementation, IMockProvider<{model.Name}{genericParams}>? mockProvider){baseCall}");
-		builder.AppendLine("        {");
-		builder.AppendLine("            RealImplementation = realImplementation ?? throw new ArgumentNullException(nameof(realImplementation));");
-		builder.AppendLine($"            MockProvider = mockProvider ?? new DefaultMockProvider<{model.Name}{genericParams}>();");
-		builder.AppendLine("        }");
-		builder.AppendLine();
-	}
-
-	private void GenerateHelperMembers(StringBuilder builder, TypeModel model, string genericParams)
-	{
-		builder.AppendLine($"        protected {model.Name}{genericParams} Implementation => MockProvider.Current ?? RealImplementation;");
-		builder.AppendLine();
-
-		builder.AppendLine("        protected bool ShouldUseMockForMethod(string methodName)");
-		builder.AppendLine("        {");
-		builder.AppendLine("            return MockProvider.Current != null &&");
-		builder.AppendLine("            (");
-		builder.AppendLine("                MockProvider.MockConfig == null ||");
-		builder.AppendLine("                MockProvider.MockConfig?.IsMethodMocked(methodName) == true");
-		builder.AppendLine("            );");
-		builder.AppendLine("        }");
-		builder.AppendLine();
-
-		builder.AppendLine("        protected bool ShouldUseMockForProperty(string propertyName)");
-		builder.AppendLine("        {");
-		builder.AppendLine("            return MockProvider.Current != null &&");
-		builder.AppendLine("            (");
-		builder.AppendLine("                MockProvider.MockConfig == null ||");
-		builder.AppendLine("                MockProvider.MockConfig?.IsPropertyMocked(propertyName) == true");
-		builder.AppendLine("            );");
-		builder.AppendLine("        }");
-		builder.AppendLine();
-
-		builder.AppendLine("        protected bool ShouldUseMockForEvent(string eventName)");
-		builder.AppendLine("        {");
-		builder.AppendLine("            return MockProvider.Current != null &&");
-		builder.AppendLine("            (");
-		builder.AppendLine("                MockProvider.MockConfig == null ||");
-		builder.AppendLine("                MockProvider.MockConfig?.IsEventMocked(eventName) == true");
-		builder.AppendLine("            );");
-		builder.AppendLine("        }");
-		builder.AppendLine();
-
-		builder.AppendLine($"        public {model.Name}{genericParams} GetRealImplementation() => RealImplementation;");
-	}
+    private void GenerateHelperMembers(StringBuilder builder, TypeModel model, string genericParams)
+    {
+        builder.AppendLine($"        protected {model.Name}{genericParams} Implementation => MockProvider.Current ?? RealImplementation;");
+        builder.AppendLine();
+        builder.AppendLine($"        public {model.Name}{genericParams} GetRealImplementation() => RealImplementation;");
+    }
 }

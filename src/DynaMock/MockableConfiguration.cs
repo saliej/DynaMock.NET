@@ -5,124 +5,109 @@ namespace DynaMock;
 
 public class MockConfiguration<T> where T : class
 {
-	private readonly HashSet<string> _mockedMethods = [];
-	private readonly HashSet<string> _mockedProperties = [];
-	private readonly HashSet<string> _mockedEvents = [];
+    private readonly HashSet<string> _mockedMethods = [];
+    private readonly HashSet<string> _mockedProperties = [];
+    private readonly HashSet<string> _mockedEvents = [];
+    private readonly Dictionary<string, List<Expression>> _methodCallPatterns = [];
 
-	public IReadOnlySet<string> MockedMethods => _mockedMethods;
-	public IReadOnlySet<string> MockedProperties => _mockedProperties;
-	public IReadOnlySet<string> MockedEvents => _mockedEvents;
+    private readonly Dictionary<string, Type> _targetTypeCallMap = [];
 
-	public MockConfiguration<T> MockMethod<TResult>(Expression<Func<T, TResult>> methodExpression)
-	{
-		if (methodExpression == null)
-		{
-			throw new ArgumentNullException(nameof(methodExpression), "Method expression cannot be null.");
-		}
+    public IReadOnlySet<string> MockedMethods => _mockedMethods;
+    public IReadOnlySet<string> MockedProperties => _mockedProperties;
+    public IReadOnlySet<string> MockedEvents => _mockedEvents;
 
-		var memberName = ExtractMemberName(methodExpression);
-		_mockedMethods.Add(memberName);
-		return this;
-	}
+    public MockConfiguration<T> MockMethod<TResult>(Expression<Func<T, TResult>> methodExpression)
+    {
+        var memberName = ExtractMemberName(methodExpression);
+        _mockedMethods.Add(memberName);
+        
+        // Store the full expression for argument matching
+        if (!_methodCallPatterns.ContainsKey(memberName))
+            _methodCallPatterns[memberName] = [];
+        
+        _methodCallPatterns[memberName].Add(methodExpression);
+        
+        return this;
+    }
 
-	public MockConfiguration<T> MockMethod(Expression<Action<T>> methodExpression)
-	{
-		if (methodExpression == null)
-		{
-			throw new ArgumentNullException(nameof(methodExpression), "Method expression cannot be null.");
-		}
+    public MockConfiguration<T> MockMethod<TResult, TTarget>(Expression<Func<T, TResult>> methodExpression, 
+        TTarget target) where TTarget : T
+    {
+        MockMethod(methodExpression);
 
-		var memberName = ExtractMemberName(methodExpression);
-		_mockedMethods.Add(memberName);
-		return this;
-	}
+        _targetTypeCallMap.Add(ExtractMemberName(methodExpression), typeof(TTarget));
 
-	public MockConfiguration<T> MockProperty<TProperty>(Expression<Func<T, TProperty>> propertyExpression)
-	{
-		if (propertyExpression == null)
-		{
-			throw new ArgumentNullException(nameof(propertyExpression), "Property expression cannot be null.");
-		}
+        return this;
+    }
 
-		var memberName = ExtractMemberName(propertyExpression);
-		_mockedProperties.Add(memberName);
-		return this;
-	}
+    public MockConfiguration<T> MockMethod(Expression<Action<T>> methodExpression)
+    {
+        var memberName = ExtractMemberName(methodExpression);
+        _mockedMethods.Add(memberName);
+        
+        if (!_methodCallPatterns.ContainsKey(memberName))
+            _methodCallPatterns[memberName] = [];
+        
+        _methodCallPatterns[memberName].Add(methodExpression);
+        
+        return this;
+    }
 
-	public MockConfiguration<T> MockEvent(string eventName)
-	{
-		if (string.IsNullOrWhiteSpace(eventName))
-		{
-			throw new ArgumentException("Event name cannot be null or empty.", nameof(eventName));
-		}
+    public MockConfiguration<T> MockProperty<TProperty>(Expression<Func<T, TProperty>> propertyExpression)
+    {
+        var memberName = ExtractMemberName(propertyExpression);
+        _mockedProperties.Add(memberName);
+        return this;
+    }
 
-		_mockedEvents.Add(eventName);
-		return this;
-	}
+    public MockConfiguration<T> MockEvent(string eventName)
+    {
+        _mockedEvents.Add(eventName);
+        return this;
+    }
 
-	private string ExtractMemberName(Expression expression)
-	{
-		switch (expression)
-		{
-			case LambdaExpression lambda:
-				if (lambda.Body == null)
-				{
-					throw new ArgumentException("Lambda expression body cannot be null.", nameof(expression));
-				}
-				return ExtractMemberName(lambda.Body);
+    private string ExtractMemberName(Expression expression)
+    {
+        switch (expression)
+        {
+            case LambdaExpression lambda:
+                return ExtractMemberName(lambda.Body);
 
-			case MethodCallExpression methodCall:
-				if (methodCall.Method == null)
-				{
-					throw new ArgumentException("Method call expression must reference a valid method.", nameof(expression));
-				}
+            case MethodCallExpression methodCall:
+                return methodCall.Method.Name;
 
-				// For method calls, the target should be the parameter of type T (the class being mocked)
-				if (methodCall.Object is not ParameterExpression)
-				{
-					throw new ArgumentException(
-						$"Invalid method call expression. Method calls must be called on the class instance being mocked. " +
-						$"Use 'x => x.MethodName()' instead of 'x => someOtherObject.MethodName()'.",
-						nameof(expression));
-				}
+            case MemberExpression member:
+                return member.Member.Name;
 
-				return methodCall.Method.Name;
+            case UnaryExpression { NodeType: ExpressionType.Convert } unary:
+                return ExtractMemberName(unary.Operand);
 
-			case MemberExpression member:
-				if (member.Member == null)
-				{
-					throw new ArgumentException("Member expression must reference a valid member.", nameof(expression));
-				}
+            default:
+                throw new ArgumentException($"Unsupported expression type: {expression.GetType()}");
+        }
+    }
 
-				// For properties/methods, the expression should be a parameter of type T (the class being mocked)
-				if (member.Expression is not ParameterExpression parameter || parameter.Type != typeof(T))
-				{
-					throw new ArgumentException(
-						$"Invalid member expression: '{member.Member.Name}'. " +
-						$"Members must be accessed directly on the class instance being mocked. " +
-						$"Use 'x => x.MemberName' instead of 'x => someOtherObject.MemberName'.",
-						nameof(expression));
-				}
+    public bool IsMethodMocked(string methodName) => _mockedMethods.Contains(methodName);
+    
+    public bool IsMethodMockedWithArgs(string methodName, object?[] args)
+    {
+        if (!_mockedMethods.Contains(methodName))
+            return false;
 
-				return member.Member.Name;
+        // If no specific patterns registered, any call to this method is mocked
+        if (!_methodCallPatterns.ContainsKey(methodName) || 
+            _methodCallPatterns[methodName].Count == 0)
+            return true;
 
-			case UnaryExpression { NodeType: ExpressionType.Convert } unary:
-				if (unary.Operand == null)
-				{
-					throw new ArgumentException("Convert expression must have a valid operand.", nameof(expression));
-				}
-				return ExtractMemberName(unary.Operand);
+        // Check if any pattern matches the arguments
+        var matcher = new ArgumentMatcher();
+        return _methodCallPatterns[methodName].Any(pattern => 
+            matcher.MatchesCall(pattern, args));
+    }
+    
+    public bool IsPropertyMocked(string propertyName) => _mockedProperties.Contains(propertyName);
+    public bool IsEventMocked(string eventName) => _mockedEvents.Contains(eventName);
 
-			default:
-				throw new ArgumentException(
-					$"Unsupported expression type: {expression.GetType().Name}. " +
-					"Expected a lambda expression accessing a method or property on the mocked class instance. " +
-					"Example: 'x => x.MethodName()' for methods or 'x => x.PropertyName' for properties.",
-					nameof(expression));
-		}
-	}
-
-	public bool IsMethodMocked(string methodName) => _mockedMethods.Contains(methodName);
-	public bool IsPropertyMocked(string propertyName) => _mockedProperties.Contains(propertyName);
-	public bool IsEventMocked(string eventName) => _mockedEvents.Contains(eventName);
+    public bool TryGetTypeForCall(string methodName, out Type? targetType) =>
+        _targetTypeCallMap.TryGetValue(methodName, out targetType);
 }

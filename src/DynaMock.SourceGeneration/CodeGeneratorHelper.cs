@@ -59,69 +59,64 @@ public class CodeGeneratorHelper
 		builder.AppendLine();
 	}
 
-	private void GenerateMethodBody(StringBuilder builder, MethodModel method, string arguments, string typeParams)
-	{
-		bool isVoid = method.ReturnType == "void";
+    private void GenerateMethodBody(StringBuilder builder, MethodModel method, string arguments, string typeParams)
+    {
+        bool isVoid = method.ReturnType == "void";
+        var methodArgs = string.IsNullOrEmpty(arguments) ? "" : arguments;
+    
+        // Create array of arguments for matching
+        var argArray = method.Parameters.Any() 
+            ? $"new object?[] {{ {string.Join(", ", method.Parameters.Select(p => p.Name))} }}"
+            : "Array.Empty<object?>()";
 
-		builder.AppendLine($"            if (ShouldUseMockForMethod(\"{method.Name}\"))");
-		builder.AppendLine("            {");
+        if (isVoid)
+        {
+            builder.AppendLine($"            Interceptor.InterceptVoidMethod(");
+            builder.AppendLine($"                x => x.{method.Name}{typeParams}({methodArgs}),");
+            builder.AppendLine($"                impl => impl.{method.Name}{typeParams}({methodArgs}),");
+            builder.AppendLine($"                {argArray});");
+        }
+        else
+        {
+            builder.AppendLine($"            return Interceptor.InterceptMethod(");
+            builder.AppendLine($"                x => x.{method.Name}{typeParams}({methodArgs}),");
+            builder.AppendLine($"                impl => impl.{method.Name}{typeParams}({methodArgs}),");
+            builder.AppendLine($"                {argArray});");
+        }
+    }
 
-		if (isVoid)
-		{
-			builder.AppendLine($"                MockProvider.Current.{method.Name}{typeParams}({arguments});");
-			builder.AppendLine("                return;");
-		}
-		else
-		{
-			builder.AppendLine($"                return MockProvider.Current.{method.Name}{typeParams}({arguments});");
-		}
+    private void GeneratePropertyGetter(StringBuilder builder, PropertyModel property)
+    {
+        builder.AppendLine("            get");
+        builder.AppendLine("            {");
+        builder.AppendLine($"                return Interceptor.InterceptPropertyGet(");
+        builder.AppendLine($"                    x => x.{property.Name},");
+        builder.AppendLine($"                    impl => impl.{property.Name});");
+        builder.AppendLine("            }");
+    }
 
-		builder.AppendLine("            }");
-		builder.AppendLine();
+    private void GeneratePropertySetter(StringBuilder builder, PropertyModel property)
+    {
+        builder.AppendLine("            set");
+        builder.AppendLine("            {");
+        builder.AppendLine($"                Interceptor.InterceptPropertySet(");
+        builder.AppendLine($"                    x => x.{property.Name},");
+        builder.AppendLine($"                    impl => impl.{property.Name} = value,");
+        builder.AppendLine($"                    value);");
+        builder.AppendLine("            }");
+    }
 
-		if (isVoid)
-			builder.AppendLine($"            RealImplementation.{method.Name}{typeParams}({arguments});");
-		else
-			builder.AppendLine($"            return RealImplementation.{method.Name}{typeParams}({arguments});");
-	}
-
-	private void GeneratePropertyGetter(StringBuilder builder, PropertyModel property)
-	{
-		builder.AppendLine("            get");
-		builder.AppendLine("            {");
-		builder.AppendLine($"                if (ShouldUseMockForProperty(\"{property.Name}\"))");
-		builder.AppendLine($"                    return MockProvider.Current.{property.Name};");
-		builder.AppendLine();
-		builder.AppendLine($"                return RealImplementation.{property.Name};");
-		builder.AppendLine("            }");
-	}
-
-	private void GeneratePropertySetter(StringBuilder builder, PropertyModel property)
-	{
-		builder.AppendLine("            set");
-		builder.AppendLine("            {");
-		builder.AppendLine($"                if (ShouldUseMockForProperty(\"{property.Name}\"))");
-		builder.AppendLine("                {");
-		builder.AppendLine($"                    MockProvider.Current.{property.Name} = value;");
-		builder.AppendLine("                    return;");
-		builder.AppendLine("                }");
-		builder.AppendLine();
-		builder.AppendLine($"                RealImplementation.{property.Name} = value;");
-		builder.AppendLine("            }");
-	}
-
-	private void GenerateEventAccessor(StringBuilder builder, EventModel evt, string accessor, string op)
-	{
-		builder.AppendLine($"            {accessor}");
-		builder.AppendLine("            {");
-		builder.AppendLine($"                if (ShouldUseMockForEvent(\"{evt.Name}\"))");
-		builder.AppendLine("                {");
-		builder.AppendLine($"                    MockProvider.Current.{evt.Name} {op} value;");
-		builder.AppendLine("                    return;");
-		builder.AppendLine("                }");
-		builder.AppendLine($"                RealImplementation.{evt.Name} {op} value;");
-		builder.AppendLine("            }");
-	}
+    private void GenerateEventAccessor(StringBuilder builder, EventModel evt, string accessor, string op)
+    {
+        var methodName = accessor == "add" ? "InterceptEventAdd" : "InterceptEventRemove";
+    
+        builder.AppendLine($"            {accessor}");
+        builder.AppendLine("            {");
+        builder.AppendLine($"                Interceptor.{methodName}(");
+        builder.AppendLine($"                    \"{evt.Name}\",");
+        builder.AppendLine($"                    impl => impl.{evt.Name} {op} value);");
+        builder.AppendLine("            }");
+    }
 
 	private string GetMethodModifiers(MethodModel method, bool isInterface, bool virtualMembers)
 	{
@@ -161,4 +156,6 @@ public class CodeGeneratorHelper
 
 		return modifiers;
 	}
+
+
 }
