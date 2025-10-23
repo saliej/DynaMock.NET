@@ -3,7 +3,6 @@ using System.Linq;
 using System.Text;
 using DynaMock.SourceGeneration.Models;
 
-
 namespace DynaMock.SourceGeneration;
 
 /// <summary>
@@ -21,11 +20,11 @@ public class WrapperCodeGenerator
 	public string GenerateWrapperClass(TypeModel model, bool virtualMembers)
 	{
 		var builder = new StringBuilder();
-
 		GenerateUsings(builder, model);
 		GenerateNamespace(builder, model, virtualMembers);
 
-		return builder.ToString();
+		// Normalize line endings to LF for cross-platform compatibility
+		return builder.ToString().Replace("\r\n", "\n");
 	}
 
 	private void GenerateUsings(StringBuilder builder, TypeModel model)
@@ -56,7 +55,9 @@ public class WrapperCodeGenerator
 		var genericParams = model.GenericTypeParameters.Any()
 			? $"<{string.Join(", ", model.GenericTypeParameters)}>"
 			: "";
-		var baseType = $"MockableBase<{model.Name}{genericParams}>";
+
+		// Change: Use generated base class instead of MockableBase<T>
+		var baseType = $"Mockable{model.Name}Base{genericParams}";
 		var interfaces = model.IsInterface ? $", {model.Name}{genericParams}" : "";
 
 		builder.AppendLine($"    public class Mockable{model.Name}{genericParams} : {baseType}{interfaces}");

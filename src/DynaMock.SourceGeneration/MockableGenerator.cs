@@ -85,10 +85,16 @@ public class MockableGenerator : IIncrementalGenerator
 		var modelBuilder = new TypeModelBuilder();
 		var typeModel = modelBuilder.BuildTypeModel(typeSymbol);
 
-		var codeGenerator = new WrapperCodeGenerator();
-		var sourceCode = codeGenerator.GenerateWrapperClass(typeModel, typeToMock.VirtualMembers);
-		var fileName = $"Mockable{typeSymbol.Name}.g.cs";
+		// Generate base class
+		var baseClassGenerator = new BaseClassCodeGenerator();
+		var baseClassCode = baseClassGenerator.GenerateBaseClass(typeModel, typeToMock.VirtualMembers);
+		var baseFileName = $"Mockable{typeSymbol.Name}Base.g.cs";
+		context.AddSource(baseFileName, SourceText.From(baseClassCode, Encoding.UTF8));
 
-		context.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
+		// Generate wrapper class
+		var wrapperGenerator = new WrapperCodeGenerator();
+		var wrapperCode = wrapperGenerator.GenerateWrapperClass(typeModel, typeToMock.VirtualMembers);
+		var wrapperFileName = $"Mockable{typeSymbol.Name}.g.cs";
+		context.AddSource(wrapperFileName, SourceText.From(wrapperCode, Encoding.UTF8));
 	}
 }

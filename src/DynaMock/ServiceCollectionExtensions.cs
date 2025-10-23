@@ -48,7 +48,7 @@ public static class ServiceCollectionExtensions
             sp =>
             {
                 var realImpl = ActivatorUtilities.CreateInstance(sp, descriptor.ImplementationType!);
-                return ActivatorUtilities.CreateInstance(sp, mockableType, new[] { realImpl });
+                return ActivatorUtilities.CreateInstance(sp, mockableType, [realImpl]);
             },
             descriptor.Lifetime));
 

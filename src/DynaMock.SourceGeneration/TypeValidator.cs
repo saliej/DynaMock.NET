@@ -1,5 +1,6 @@
-﻿using System;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
+using System;
+using System.Linq;
 
 namespace DynaMock.SourceGeneration;
 
@@ -47,6 +48,20 @@ public class TypeValidator
 		{
 			reason = "structs cannot be mocked";
 			return false;
+		}
+
+		// For concrete classes (not abstract), require parameterless constructor
+		if (typeSymbol.TypeKind == TypeKind.Class && !typeSymbol.IsAbstract)
+		{
+			var hasParameterlessConstructor = typeSymbol.Constructors
+				.Any(c => c.Parameters.Length == 0 &&
+						 c.DeclaredAccessibility == Accessibility.Public);
+
+			if (!hasParameterlessConstructor)
+			{
+				reason = "concrete classes must have a public parameterless constructor";
+				return false;
+			}
 		}
 
 		return true;

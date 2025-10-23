@@ -1,5 +1,4 @@
 ﻿using DemoWebApp.Repositories;
-using System.IO.IsolatedStorage;
 
 namespace DemoWebApp.Services;
 
@@ -7,6 +6,7 @@ public interface IStorageService
 {
 	List<string> GetAllItems();
 }
+
 public class StorageService(IRepository repository) : IStorageService
 {
 	public List<string> GetAllItems() =>

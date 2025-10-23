@@ -10,6 +10,8 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<IDemoService, DemoService>();
 builder.Services.AddTransient<IRepository, DemoRepository>();
 builder.Services.AddTransient<IStorageService, StorageService>();
+builder.Services.AddTransient<INameGenerationService, NameGenerationService>();
+builder.Services.AddTransient<BaseNameGenerator, ConcreteNameGenerator>();
 
 var app = builder.Build();
 

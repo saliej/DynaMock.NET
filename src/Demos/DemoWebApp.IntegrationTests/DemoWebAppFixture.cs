@@ -9,7 +9,11 @@ using Microsoft.Extensions.Configuration;
 namespace DemoWebApp.IntegrationTests;
 
 // Specify types to generate mockable wrappers for
-[Mockable(typeof(IDemoService), typeof(IRepository))]
+[Mockable(
+	typeof(IDemoService), 
+	typeof(IRepository),
+	typeof(BaseNameGenerator)
+)]
 public class MockableTypes { }
 
 public class DemoWebAppFixture : WebApplicationFactory<DemoWebApp.Program>
@@ -29,6 +33,7 @@ public class DemoWebAppFixture : WebApplicationFactory<DemoWebApp.Program>
 			// Inject Mockable wrappers for services to be mocked in tests
 			services.AddMockable<IDemoService>();
 			services.AddMockable<IRepository>();
+			services.AddMockable<BaseNameGenerator>();
 		});
 	}
 }

@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Globalization;
 using System.Net.Http.Json;
 using AwesomeAssertions;
 using DemoWebApp.Repositories;
-using DemoWebApp.Services;
 using DynaMock;
-using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NSubstitute.ClearExtensions;
 using Reqnroll;
@@ -20,7 +17,7 @@ public class StorageServiceSteps
 	private readonly HttpClient _httpClient;
 	private readonly IRepository _mockRepository;
 
-	private ScenarioContext _scenarioContext;
+	private readonly ScenarioContext _scenarioContext;
 
 	public StorageServiceSteps(ScenarioContext scenarioContext)
 	{
