@@ -11,16 +11,16 @@ using Reqnroll;
 namespace DemoWebApp.IntegrationTests.Reqnroll.Steps;
 
 [Binding]
-[Scope(Feature = "NameService")]
+[Scope(Feature = "AbstractClass")]
 
-public class NameServiceSteps
+public class AbstractClassSteps
 {
 	private readonly HttpClient _httpClient;
 	private readonly BaseNameGenerator _mockNameGenerator;
 
 	private readonly ScenarioContext _scenarioContext;
 
-	public NameServiceSteps(ScenarioContext scenarioContext)
+	public AbstractClassSteps(ScenarioContext scenarioContext)
 	{
 		_scenarioContext = scenarioContext;
 		_mockNameGenerator = Substitute.For<BaseNameGenerator>();

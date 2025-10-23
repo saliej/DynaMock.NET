@@ -33,7 +33,7 @@ namespace DynaMock.Generated
         {
         }
 
-        public new virtual string GetValue()
+        public string GetValue()
         {
             return Interceptor.InterceptMethod(
                 x => x.GetValue(),
@@ -41,7 +41,7 @@ namespace DynaMock.Generated
                 Array.Empty<object?>());
         }
 
-        public new virtual int Add(int first, int second)
+        public int Add(int first, int second)
         {
             return Interceptor.InterceptMethod(
                 x => x.Add(first, second),
@@ -49,7 +49,7 @@ namespace DynaMock.Generated
                 new object?[] { first, second });
         }
 
-        public virtual int Count
+        public int Count
         {
             get
             {

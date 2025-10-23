@@ -127,6 +127,7 @@ public class CodeGeneratorHelper
 			modifiers += "override ";
 		else if (virtualMembers)
 			modifiers += "virtual ";
+		else modifiers += "virtual ";
 
 		return modifiers;
 	}

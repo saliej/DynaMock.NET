@@ -44,7 +44,7 @@ public class WrapperCodeGeneratorTests
 		result.Should().Contain("using DynaMock;");
 		result.Should().Contain("using Test.Namespace;");
 		result.Should().Contain("namespace DynaMock.Generated");
-		result.Should().Contain("public class MockableITestService : MockableBase<ITestService>, ITestService");
+		result.Should().Contain("public class MockableITestService : MockableITestServiceBase, ITestService");
 		result.Should().Contain("public MockableITestService(ITestService realImplementation)");
 		result.Should().Contain("public string GetValue()");
 	}
@@ -66,7 +66,7 @@ public class WrapperCodeGeneratorTests
 
 		var result = _generator.GenerateWrapperClass(model, virtualMembers: false);
 
-		result.Should().Contain("public class MockableIRepository<T> : MockableBase<IRepository<T>>, IRepository<T>");
+		result.Should().Contain("public class MockableIRepository<T> : MockableIRepositoryBase<T>, IRepository<T>");
 		result.Should().Contain("where T : class");
 	}
 
@@ -87,7 +87,7 @@ public class WrapperCodeGeneratorTests
 
 		var result = _generator.GenerateWrapperClass(model, virtualMembers: false);
 
-		result.Should().Contain("public class MockableTestService : MockableBase<TestService>");
+		result.Should().Contain("public class MockableTestService : MockableTestServiceBase");
 		result.Should().NotContain(", TestService"); // Should not have interface implementation
 	}
 

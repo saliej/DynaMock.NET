@@ -4,7 +4,7 @@ namespace DynaMock.UnitTests.TestServices;
 
 public class ConcreteService
 {
-    public string GetValue()
+	public string GetValue()
     {
         return "ConcreteValue";
     }

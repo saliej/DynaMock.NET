@@ -1,4 +1,4 @@
-﻿Feature: NameService
+﻿Feature: AbstractClass
 
 Demonstrates mocking of abstract classes used by a service
 

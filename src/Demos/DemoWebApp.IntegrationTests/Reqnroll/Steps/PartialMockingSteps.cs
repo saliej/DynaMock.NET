@@ -10,16 +10,16 @@ using Reqnroll;
 namespace DemoWebApp.IntegrationTests.Reqnroll.Steps;
 
 [Binding]
-[Scope(Feature = "StorageService")]
+[Scope(Feature = "PartialMocking")]
 
-public class StorageServiceSteps
+public class PartialMockingSteps
 {
 	private readonly HttpClient _httpClient;
 	private readonly IRepository _mockRepository;
 
 	private readonly ScenarioContext _scenarioContext;
 
-	public StorageServiceSteps(ScenarioContext scenarioContext)
+	public PartialMockingSteps(ScenarioContext scenarioContext)
 	{
 		_scenarioContext = scenarioContext;
 		_mockRepository = Substitute.For<IRepository>();

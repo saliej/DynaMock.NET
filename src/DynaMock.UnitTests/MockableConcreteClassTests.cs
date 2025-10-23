@@ -9,7 +9,7 @@ namespace DynaMock.UnitTests;
 
 public class MockableConcreteClassTests
 {
-    public class DummyConcreteService : ConcreteService
+    public class ConcreteServiceDouble : ConcreteService
     {
         public new string GetValue()
         {
@@ -29,9 +29,9 @@ public class MockableConcreteClassTests
         var realImpl = new ConcreteService();
         var mockable = new MockableConcreteService(realImpl);
 
-        var mock = new DummyConcreteService();
+        var mock = new ConcreteServiceDouble();
         DefaultMockProvider<ConcreteService>.SetMock(mock, config => config
-            .MockMethod(x => x.Add(3, 5), mock));
+            .MockMethod(x => x.Add(Pred.Is<int>(a => a > 2 && a < 4), 5), mock));
         
         // Act
         mockable.Add(1, 3).Should().Be(4);
