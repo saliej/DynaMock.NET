@@ -11,16 +11,16 @@ using Reqnroll;
 namespace DemoWebApp.IntegrationTests.Reqnroll.Steps;
 
 [Binding]
-[Scope(Feature = "DemoService")]
+[Scope(Feature = "InterfaceInjection")]
 
-public class DemoServiceSteps
+public class InterfaceInjectionSteps
 {
 	private readonly HttpClient _httpClient;
 	private readonly IDemoService _mockDemoService;
 
 	private ScenarioContext _scenarioContext;
 
-	public DemoServiceSteps(ScenarioContext scenarioContext)
+	public InterfaceInjectionSteps(ScenarioContext scenarioContext)
 	{
 		_scenarioContext = scenarioContext;
 		_mockDemoService = Substitute.For<IDemoService>();

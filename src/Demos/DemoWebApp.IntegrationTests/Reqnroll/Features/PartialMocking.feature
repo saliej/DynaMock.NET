@@ -1,4 +1,4 @@
-﻿Feature: StorageService
+﻿Feature: PartialMocking
 
 Demonstrates mocking of injected classes used by a service
 

@@ -979,7 +979,7 @@ internal class SourceGeneratorTest : CSharpSourceGeneratorTest<MockableGenerator
         // Add required references
         ReferenceAssemblies = ReferenceAssemblies.Net.Net90;
         
-        // Add DynaMock assembly reference (where MockableAttribute and MockableBase are defined)
+        // Add DynaMock assembly reference (where MockableAttribute are defined)
         TestState.AdditionalReferences.Add(typeof(DynaMock.MockableAttribute).Assembly);
     }
 

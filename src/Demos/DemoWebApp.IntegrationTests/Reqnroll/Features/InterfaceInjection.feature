@@ -1,4 +1,4 @@
-﻿Feature: DemoService
+﻿Feature: InterfaceInjection
 
 Demonstrates mocking of injected services
 
