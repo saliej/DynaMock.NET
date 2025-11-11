@@ -3,6 +3,11 @@
 
 //namespace DynaMock;
 
+public interface IMockableBase<T> where T : class
+{
+    T GetRealImplementation();
+}
+
 //public abstract class MockableBase<T> where T : class
 //{
 //	protected readonly T RealImplementation;

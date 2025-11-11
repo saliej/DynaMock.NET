@@ -49,10 +49,18 @@ public class CallInterceptor<T> where T : class
         if (_mockProvider.Current == null)
             return realCall(_realImplementation);
 
-        var memberName = ExtractMemberName(methodExpression);
-    
-        if (_mockProvider.MockConfig?.IsMethodMockedWithArgs(memberName, args) == true)
+        // If there is no configuration, always use the mock by default
+        if (_mockProvider.MockConfig == null)
         {
+            var mockFunc = methodExpression.Compile();
+            return mockFunc(_mockProvider.Current);
+        }
+
+        // We have a configuration, so check if we have specifically elected to mock this call
+        var memberName = ExtractMemberName(methodExpression);
+        if (_mockProvider.MockConfig.IsMethodMockedWithArgs(memberName, args))
+        {
+            // Check if a specific target type is configured for this method
             if (_mockProvider.MockConfig.TryGetTypeForMethod(memberName, out var targetType))
             {
                 return InvokeOnTargetType(methodExpression, 
@@ -60,6 +68,7 @@ public class CallInterceptor<T> where T : class
                     targetType!, args);
             }
 
+            // No target type, so invoke the method on the mock
             var mockFunc = methodExpression.Compile();
             return mockFunc(_mockProvider.Current);
         }
@@ -67,6 +76,7 @@ public class CallInterceptor<T> where T : class
         // No mocking configured for this method call, call the real implementation
         return realCall(_realImplementation);
     }
+
     private TResult InvokeOnTargetType<TResult>(
         Expression<Func<T, TResult>> methodExpression,
         T target,
@@ -91,6 +101,29 @@ public class CallInterceptor<T> where T : class
         return (TResult)result!;
     }
 
+    private void InvokeVoidMethodOnTargetType(
+        Expression<Action<T>> methodExpression,
+        T target,
+        Type targetType,
+        object?[] args)
+    {
+        if (methodExpression.Body is not MethodCallExpression methodCall)
+            throw new InvalidOperationException("Expected method call expression");
+
+        var methodInfo = methodCall.Method;
+    
+        // Find the method on the actual runtime type (handles 'new' methods)
+        var actualMethod = targetType.GetMethod(
+            methodInfo.Name,
+            System.Reflection.BindingFlags.Public | 
+            System.Reflection.BindingFlags.Instance,
+            null,
+            methodInfo.GetParameters().Select(p => p.ParameterType).ToArray(),
+            null) ?? methodInfo;
+
+        actualMethod.Invoke(target, args);
+    }
+
     public void InterceptVoidMethod(
         Expression<Action<T>> methodExpression,
         Action<T> realCall,
@@ -101,20 +134,34 @@ public class CallInterceptor<T> where T : class
             realCall(_realImplementation);
             return;
         }
-
-        var memberName = ExtractMemberName(methodExpression);
-
-        if (_mockProvider.MockConfig != null)
+                
+        if (_mockProvider.MockConfig == null)
         {
-            if (!_mockProvider.MockConfig.IsMethodMockedWithArgs(memberName, args))
-            {
-                realCall(_realImplementation);
-                return;
-            }
+            // No specific mocking configuration, always use the mock by default
+            var mockAction = methodExpression.Compile();
+            mockAction(_mockProvider.Current);
+            return;
         }
 
-        var mockAction = methodExpression.Compile();
-        mockAction(_mockProvider.Current);
+        var memberName = ExtractMemberName(methodExpression);
+        if (_mockProvider.MockConfig.IsMethodMockedWithArgs(memberName, args))
+        {
+            // Check if a specific target type is configured for this method
+            if (_mockProvider.MockConfig.TryGetTypeForMethod(memberName, out var targetType))
+            {
+                InvokeVoidMethodOnTargetType(methodExpression, 
+                    _mockProvider.Current, 
+                    targetType!, args);
+            }
+
+            // No target type, so invoke the method on the mock
+            var mockAction = methodExpression.Compile();
+            mockAction(_mockProvider.Current);
+            return;
+        }
+
+        // No mocking configured for this method call, call the real implementation
+        realCall(_realImplementation);
     }
 
     public TProperty InterceptPropertyGet<TProperty>(
@@ -159,45 +206,61 @@ public class CallInterceptor<T> where T : class
         realCall(_mockProvider.Current);
     }
 
-    public void InterceptEventAdd(
-        string eventName,
-        Action<T> realCall)
+    public void InterceptEventAdd(string eventName, Action<T> eventCall)
     {
+        // If no mock is set, call the real implementation
         if (_mockProvider.Current == null)
         {
-            realCall(_realImplementation);
+            eventCall(_realImplementation);
             return;
         }
 
+        // If there is no configuration, always use the mock by default
+        if (_mockProvider.MockConfig == null)
+        {
+            eventCall(_mockProvider.Current);
+            return;
+        }
+
+        // If we have a configuration, but the event is not mocked, call the real implementation
         if (_mockProvider.MockConfig != null &&
             !_mockProvider.MockConfig.IsEventMocked(eventName))
         {
-            realCall(_realImplementation);
+            eventCall(_realImplementation);
             return;
         }
 
-        realCall(_mockProvider.Current);
+        eventCall(_mockProvider.Current);
     }
 
-    public void InterceptEventRemove(
-        string eventName,
-        Action<T> realCall)
+
+    public void InterceptEventRemove(string eventName, Action<T> eventCall)
     {
+        // If no mock is set, call the real implementation
         if (_mockProvider.Current == null)
         {
-            realCall(_realImplementation);
+            eventCall(_realImplementation);
             return;
         }
 
+        // If there is no configuration, always use the mock by default
+        if (_mockProvider.MockConfig == null)
+        {
+            eventCall(_mockProvider.Current);
+            return;
+        }
+
+        // If we have a configuration, but the event is not mocked, call the real implementation
         if (_mockProvider.MockConfig != null &&
             !_mockProvider.MockConfig.IsEventMocked(eventName))
         {
-            realCall(_realImplementation);
+            eventCall(_realImplementation);
             return;
         }
 
-        realCall(_mockProvider.Current);
+        eventCall(_mockProvider.Current);
     }
+
     private string ExtractMemberName(Expression expression)
     {
         switch (expression)

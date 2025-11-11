@@ -50,7 +50,11 @@ public class BaseClassCodeGenerator
 		var baseClass = "";
 		if (!model.IsInterface)
 		{
-			baseClass = $" : {model.Name}{genericParams}";
+			baseClass = $" : {model.Name}{genericParams}, IMockableBase<{model.Name}>";
+		}
+		else
+		{
+            baseClass = $" : IMockableBase<{model.Name}>";
 		}
 
 		builder.AppendLine($"    public abstract class Mockable{model.Name}Base{genericParams}{baseClass}");

@@ -106,17 +106,17 @@ public class CodeGeneratorHelper
         builder.AppendLine("            }");
     }
 
-    private void GenerateEventAccessor(StringBuilder builder, EventModel evt, string accessor, string op)
-    {
-        var methodName = accessor == "add" ? "InterceptEventAdd" : "InterceptEventRemove";
-    
-        builder.AppendLine($"            {accessor}");
-        builder.AppendLine("            {");
-        builder.AppendLine($"                Interceptor.{methodName}(");
-        builder.AppendLine($"                    \"{evt.Name}\",");
-        builder.AppendLine($"                    impl => impl.{evt.Name} {op} value);");
-        builder.AppendLine("            }");
-    }
+	private void GenerateEventAccessor(StringBuilder builder, EventModel evt, string accessor, string op)
+	{
+		var methodName = accessor == "add" ? "InterceptEventAdd" : "InterceptEventRemove";
+
+		builder.AppendLine($"            {accessor}");
+		builder.AppendLine("            {");
+		builder.AppendLine($"                Interceptor.{methodName}(");
+		builder.AppendLine($"                    \"{evt.Name}\",");
+		builder.AppendLine($"                    impl => impl.{evt.Name} {op} value);");
+		builder.AppendLine("            }");
+	}
 
 	private string GetMethodModifiers(MethodModel method, bool isInterface, bool virtualMembers)
 	{
@@ -125,8 +125,7 @@ public class CodeGeneratorHelper
 		var modifiers = "public ";
 		if (method.IsVirtual || method.IsAbstract)
 			modifiers += "override ";
-		else if (virtualMembers)
-			modifiers += "virtual ";
+		else modifiers += "new virtual ";
 
 		return modifiers;
 	}
@@ -156,6 +155,4 @@ public class CodeGeneratorHelper
 
 		return modifiers;
 	}
-
-
 }

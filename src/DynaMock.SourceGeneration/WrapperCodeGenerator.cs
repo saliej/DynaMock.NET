@@ -32,6 +32,7 @@ public class WrapperCodeGenerator
 		builder.AppendLine("using System;");
 		builder.AppendLine("using System.Threading;");
 		builder.AppendLine("using System.Threading.Tasks;");
+        builder.AppendLine("using System.Linq.Expressions;");
 		builder.AppendLine("using DynaMock;");
 
 		if (!string.IsNullOrEmpty(model.Namespace) && model.Namespace != "DynaMock.Generated")

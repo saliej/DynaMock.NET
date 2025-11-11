@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using AwesomeAssertions;
 using Microsoft.CodeAnalysis;
 using NSubstitute;
@@ -7,123 +8,177 @@ namespace DynaMock.SourceGeneration.UnitTests;
 
 public class TypeValidatorTests
 {
-	private readonly TypeValidator _validator;
+    private readonly TypeValidator _sut = new();
 
-	public TypeValidatorTests()
-	{
-		_validator = new TypeValidator();
-	}
+    [Fact]
+    public void CanBeMocked_SealedClass_ReturnsFalse()
+    {
+        var typeSymbol = CreateTypeSymbol(TypeKind.Class, isSealed: true);
 
-	[Fact]
-	public void CanBeMocked_WithRegularClass_ReturnsTrue()
-	{
-		var typeSymbol = CreateTypeSymbol(TypeKind.Class, isSealed: false, isStatic: false);
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
-		var result = _validator.CanBeMocked(typeSymbol, out var reason);
+        result.Should().BeFalse();
+        reason.Should().Be("sealed classes cannot be mocked");
+    }
 
-		result.Should().BeTrue();
-		reason.Should().BeEmpty();
-	}
+    [Fact]
+    public void CanBeMocked_StaticClass_ReturnsFalse()
+    {
+        var typeSymbol = CreateTypeSymbol(TypeKind.Class, isStatic: true);
 
-	[Fact]
-	public void CanBeMocked_WithInterface_ReturnsTrue()
-	{
-		var typeSymbol = CreateTypeSymbol(TypeKind.Interface);
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
-		var result = _validator.CanBeMocked(typeSymbol, out var reason);
+        result.Should().BeFalse();
+        reason.Should().Be("static classes cannot be mocked");
+    }
 
-		result.Should().BeTrue();
-		reason.Should().BeEmpty();
-	}
+    [Fact]
+    public void CanBeMocked_PrimitiveType_ReturnsFalse()
+    {
+        var typeSymbol = CreateTypeSymbol(TypeKind.Class, specialType: SpecialType.System_Int32);
 
-	[Fact]
-	public void CanBeMocked_WithSealedClass_ReturnsFalse()
-	{
-		var typeSymbol = CreateTypeSymbol(TypeKind.Class, isSealed: true);
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
-		var result = _validator.CanBeMocked(typeSymbol, out var reason);
+        result.Should().BeFalse();
+        reason.Should().Be("primitive types cannot be mocked");
+    }
 
-		result.Should().BeFalse();
-		reason.Should().Be("sealed classes cannot be mocked");
-	}
+    [Fact]
+    public void CanBeMocked_Delegate_ReturnsFalse()
+    {
+        var typeSymbol = CreateTypeSymbol(TypeKind.Delegate);
 
-	[Fact]
-	public void CanBeMocked_WithStaticClass_ReturnsFalse()
-	{
-		var typeSymbol = CreateTypeSymbol(TypeKind.Class, isStatic: true);
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
-		var result = _validator.CanBeMocked(typeSymbol, out var reason);
+        result.Should().BeFalse();
+        reason.Should().Be("delegates cannot be mocked");
+    }
 
-		result.Should().BeFalse();
-		reason.Should().Be("static classes cannot be mocked");
-	}
+    [Fact]
+    public void CanBeMocked_Enum_ReturnsFalse()
+    {
+        var typeSymbol = CreateTypeSymbol(TypeKind.Enum);
 
-	[Fact]
-	public void CanBeMocked_WithDelegate_ReturnsFalse()
-	{
-		var typeSymbol = CreateTypeSymbol(TypeKind.Delegate);
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
-		var result = _validator.CanBeMocked(typeSymbol, out var reason);
+        result.Should().BeFalse();
+        reason.Should().Be("enums cannot be mocked");
+    }
 
-		result.Should().BeFalse();
-		reason.Should().Be("delegates cannot be mocked");
-	}
+    [Fact]
+    public void CanBeMocked_Struct_ReturnsFalse()
+    {
+        var typeSymbol = CreateTypeSymbol(TypeKind.Struct);
 
-	[Fact]
-	public void CanBeMocked_WithEnum_ReturnsFalse()
-	{
-		var typeSymbol = CreateTypeSymbol(TypeKind.Enum);
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
-		var result = _validator.CanBeMocked(typeSymbol, out var reason);
+        result.Should().BeFalse();
+        reason.Should().Be("structs cannot be mocked");
+    }
 
-		result.Should().BeFalse();
-		reason.Should().Be("enums cannot be mocked");
-	}
+    [Fact]
+    public void CanBeMocked_ConcreteClassWithoutParameterlessConstructor_ReturnsFalse()
+    {
+        var constructor = Substitute.For<IMethodSymbol>();
+        constructor.Parameters.Returns(ImmutableArray.Create(Substitute.For<IParameterSymbol>()));
+        constructor.DeclaredAccessibility.Returns(Accessibility.Public);
 
-	[Fact]
-	public void CanBeMocked_WithStruct_ReturnsFalse()
-	{
-		var typeSymbol = CreateTypeSymbol(TypeKind.Struct);
+        var typeSymbol = CreateTypeSymbol(TypeKind.Class, isAbstract: false, constructors: new[] { constructor });
 
-		var result = _validator.CanBeMocked(typeSymbol, out var reason);
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
-		result.Should().BeFalse();
-		reason.Should().Be("structs cannot be mocked");
-	}
+        result.Should().BeFalse();
+        reason.Should().Be("concrete classes must have a public parameterless constructor");
+    }
 
-	[Fact]
-	public void CanBeMocked_WithPrimitiveType_ReturnsFalse()
-	{
-		var typeSymbol = CreateTypeSymbol(TypeKind.Class, specialType: SpecialType.System_Int32);
+    [Fact]
+    public void CanBeMocked_ConcreteClassWithPrivateParameterlessConstructor_ReturnsFalse()
+    {
+        var constructor = Substitute.For<IMethodSymbol>();
+        constructor.Parameters.Returns(ImmutableArray<IParameterSymbol>.Empty);
+        constructor.DeclaredAccessibility.Returns(Accessibility.Private);
 
-		var result = _validator.CanBeMocked(typeSymbol, out var reason);
+        var typeSymbol = CreateTypeSymbol(TypeKind.Class, isAbstract: false, constructors: new[] { constructor });
 
-		result.Should().BeFalse();
-		reason.Should().Be("primitive types cannot be mocked");
-	}
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
-	[Fact]
-	public void CanBeMocked_WithSystemObject_ReturnsTrue()
-	{
-		var typeSymbol = CreateTypeSymbol(TypeKind.Class, specialType: SpecialType.System_Object);
+        result.Should().BeFalse();
+        reason.Should().Be("concrete classes must have a public parameterless constructor");
+    }
 
-		var result = _validator.CanBeMocked(typeSymbol, out var reason);
+    [Fact]
+    public void CanBeMocked_ConcreteClassWithPublicParameterlessConstructor_ReturnsTrue()
+    {
+        var constructor = Substitute.For<IMethodSymbol>();
+        constructor.Parameters.Returns(ImmutableArray<IParameterSymbol>.Empty);
+        constructor.DeclaredAccessibility.Returns(Accessibility.Public);
 
-		result.Should().BeTrue();
-		reason.Should().BeEmpty();
-	}
+        var typeSymbol = CreateTypeSymbol(TypeKind.Class, isAbstract: false, constructors: new[] { constructor });
 
-	private INamedTypeSymbol CreateTypeSymbol(
-		TypeKind typeKind,
-		bool isSealed = false,
-		bool isStatic = false,
-		SpecialType specialType = SpecialType.None)
-	{
-		var symbol = Substitute.For<INamedTypeSymbol>();
-		symbol.TypeKind.Returns(typeKind);
-		symbol.IsSealed.Returns(isSealed);
-		symbol.IsStatic.Returns(isStatic);
-		symbol.SpecialType.Returns(specialType);
-		return symbol;
-	}
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
+
+        result.Should().BeTrue();
+        reason.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void CanBeMocked_AbstractClass_ReturnsTrue()
+    {
+        var typeSymbol = CreateTypeSymbol(TypeKind.Class, isAbstract: true);
+
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
+
+        result.Should().BeTrue();
+        reason.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void CanBeMocked_Interface_ReturnsTrue()
+    {
+        var typeSymbol = CreateTypeSymbol(TypeKind.Interface);
+
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
+
+        result.Should().BeTrue();
+        reason.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void CanBeMocked_SystemObject_ReturnsTrue()
+    {
+        var constructor = Substitute.For<IMethodSymbol>();
+        constructor.Parameters.Returns(ImmutableArray<IParameterSymbol>.Empty);
+        constructor.DeclaredAccessibility.Returns(Accessibility.Public);
+
+        var typeSymbol = CreateTypeSymbol(
+            TypeKind.Class,
+            specialType: SpecialType.System_Object,
+            isAbstract: false,
+            constructors: new[] { constructor });
+
+        var result = _sut.CanBeMocked(typeSymbol, out var reason);
+
+        result.Should().BeTrue();
+        reason.Should().BeEmpty();
+    }
+
+    private static INamedTypeSymbol CreateTypeSymbol(
+        TypeKind typeKind,
+        bool isSealed = false,
+        bool isStatic = false,
+        bool isAbstract = false,
+        SpecialType specialType = SpecialType.None,
+        IMethodSymbol[] constructors = null)
+    {
+        var symbol = Substitute.For<INamedTypeSymbol>();
+        symbol.TypeKind.Returns(typeKind);
+        symbol.IsSealed.Returns(isSealed);
+        symbol.IsStatic.Returns(isStatic);
+        symbol.IsAbstract.Returns(isAbstract);
+        symbol.SpecialType.Returns(specialType);
+        symbol.Constructors.Returns(constructors != null 
+            ? ImmutableArray.Create(constructors) 
+            : ImmutableArray<IMethodSymbol>.Empty);
+        return symbol;
+    }
 }
