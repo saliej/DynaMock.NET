@@ -77,7 +77,7 @@ public class TypeValidatorTests
     }
 
     [Fact]
-    public void CanBeMocked_ConcreteClassWithoutParameterlessConstructor_ReturnsFalse()
+    public void CanBeMocked_ConcreteClass_ReturnsFalse()
     {
         var constructor = Substitute.For<IMethodSymbol>();
         constructor.Parameters.Returns(ImmutableArray.Create(Substitute.For<IParameterSymbol>()));
@@ -88,26 +88,11 @@ public class TypeValidatorTests
         var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
         result.Should().BeFalse();
-        reason.Should().Be("concrete classes must have a public parameterless constructor");
+        reason.Should().Be("concrete classes cannot be mocked - only interfaces and abstract classes are supported");
     }
 
     [Fact]
-    public void CanBeMocked_ConcreteClassWithPrivateParameterlessConstructor_ReturnsFalse()
-    {
-        var constructor = Substitute.For<IMethodSymbol>();
-        constructor.Parameters.Returns(ImmutableArray<IParameterSymbol>.Empty);
-        constructor.DeclaredAccessibility.Returns(Accessibility.Private);
-
-        var typeSymbol = CreateTypeSymbol(TypeKind.Class, isAbstract: false, constructors: new[] { constructor });
-
-        var result = _sut.CanBeMocked(typeSymbol, out var reason);
-
-        result.Should().BeFalse();
-        reason.Should().Be("concrete classes must have a public parameterless constructor");
-    }
-
-    [Fact]
-    public void CanBeMocked_ConcreteClassWithPublicParameterlessConstructor_ReturnsTrue()
+    public void CanBeMocked_ConcreteClassWithParameterlessConstructor_ReturnsFalse()
     {
         var constructor = Substitute.For<IMethodSymbol>();
         constructor.Parameters.Returns(ImmutableArray<IParameterSymbol>.Empty);
@@ -117,8 +102,8 @@ public class TypeValidatorTests
 
         var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
-        result.Should().BeTrue();
-        reason.Should().BeEmpty();
+        result.Should().BeFalse();
+        reason.Should().Be("concrete classes cannot be mocked - only interfaces and abstract classes are supported");
     }
 
     [Fact]
@@ -144,7 +129,7 @@ public class TypeValidatorTests
     }
 
     [Fact]
-    public void CanBeMocked_SystemObject_ReturnsTrue()
+    public void CanBeMocked_SystemObject_ReturnsFalse()
     {
         var constructor = Substitute.For<IMethodSymbol>();
         constructor.Parameters.Returns(ImmutableArray<IParameterSymbol>.Empty);
@@ -158,8 +143,8 @@ public class TypeValidatorTests
 
         var result = _sut.CanBeMocked(typeSymbol, out var reason);
 
-        result.Should().BeTrue();
-        reason.Should().BeEmpty();
+        result.Should().BeFalse();
+        reason.Should().Be("concrete classes cannot be mocked - only interfaces and abstract classes are supported");
     }
 
     private static INamedTypeSymbol CreateTypeSymbol(

@@ -233,8 +233,7 @@ mock.GetWeatherAsync(Arg.Any<string>())
 ## Supported Types
 
 - Interfaces
-- Abstract classes  
-- Concrete classes with virtual members
+- Abstract classes
 - Generic types
 - Async methods
 - Properties (get/set)

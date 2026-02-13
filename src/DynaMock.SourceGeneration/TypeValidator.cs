@@ -50,18 +50,11 @@ public class TypeValidator
 			return false;
 		}
 
-		// For concrete classes (not abstract), require parameterless constructor
+		// Concrete classes (not abstract) are not supported
 		if (typeSymbol.TypeKind == TypeKind.Class && !typeSymbol.IsAbstract)
 		{
-			var hasParameterlessConstructor = typeSymbol.Constructors
-				.Any(c => c.Parameters.Length == 0 &&
-						 c.DeclaredAccessibility == Accessibility.Public);
-
-			if (!hasParameterlessConstructor)
-			{
-				reason = "concrete classes must have a public parameterless constructor";
-				return false;
-			}
+			reason = "concrete classes cannot be mocked - only interfaces and abstract classes are supported";
+			return false;
 		}
 
 		return true;

@@ -6,7 +6,8 @@ using NSubstitute;
 
 namespace DynaMock.UnitTests;
 
-public class InterfaceMockingTests
+[Collection("Mock Isolation")]
+public class InterfaceMockingTests : IDisposable
 {
     public class BasicService : IBasicService
     {
@@ -30,9 +31,10 @@ public class InterfaceMockingTests
             OnEventWithArgs?.Invoke(this, myEventArgs);
     }
 
-    public InterfaceMockingTests()
+    public void Dispose()
     {
         DefaultMockProvider<IBasicService>.RemoveMock();
+        GC.SuppressFinalize(this);
     }
 
     [Fact]
@@ -120,8 +122,8 @@ public class InterfaceMockingTests
         // Do nothing, do not throw
         mock.When(m => m.DoSomething()).Do(_ => { });
 
-        var service = provider.GetRequiredService<IBasicService>();
         DefaultMockProvider<IBasicService>.SetMock(mock);
+        var service = provider.GetRequiredService<IBasicService>();
 
         service.Add(1, 2).Should().Be(10);
         service.GetValue().Should().Be("MockedGetValue");
@@ -145,8 +147,8 @@ public class InterfaceMockingTests
         // Do nothing, do not throw
         mock.When(m => m.DoSomething()).Do(_ => { });
 
-        var service = provider.GetRequiredService<IBasicService>();
         DefaultMockProvider<IBasicService>.SetMock(mock);
+        var service = provider.GetRequiredService<IBasicService>();
 
         // Redirects to the mock, but the mock isn't configured for these parameters so 0 is returned
         service.Add(1, 2).Should().Be(0);
