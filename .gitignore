@@ -366,4 +366,4 @@ FodyWeavers.xsd
 /.sonarqube/*
 **/.nyc_output/**
 /SonarQube.xml
-**/.idea/**
+.idea/
