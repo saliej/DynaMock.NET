@@ -367,3 +367,4 @@ FodyWeavers.xsd
 **/.nyc_output/**
 /SonarQube.xml
 .idea/
+.claude/
