@@ -1,7 +1,9 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using DynaMock;
 
 namespace DynaMock.UnitTests.Services;
 
+[Mockable]
 public interface IBasicService
 {
     void DoSomething();

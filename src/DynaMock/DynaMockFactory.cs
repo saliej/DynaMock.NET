@@ -8,8 +8,10 @@ public static class DynaMockFactory
 	{
 		// Find the generated mockable type using reflection, just like in ServiceCollectionExtensions.
 		var mockableTypeName = $"DynaMock.Generated.Mockable{typeof(T).Name}";
-		var mockableType = typeof(T).Assembly.GetType(mockableTypeName, throwOnError: true)
-			?? throw new NullReferenceException($"Type {mockableTypeName} not found");
+		var mockableType = AppDomain.CurrentDomain.GetAssemblies()
+			.SelectMany(a => a.GetTypes())
+			.FirstOrDefault(t => t.FullName == mockableTypeName)
+			?? throw new InvalidOperationException($"No mockable wrapper found for type {typeof(T).Name}. Ensure the type is marked with [Mockable] attribute.");
 
 		return (T)Activator.CreateInstance(mockableType, realImplementation, mockProvider)!;
 	}
