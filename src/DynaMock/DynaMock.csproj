@@ -15,7 +15,7 @@
     <!-- Package Information -->
     <PackageId>DynaMock</PackageId>
     <Version>1.0.1</Version>
-    <PackageVersion>1.0.1</PackageVersion>
+    <PackageVersion>1.0.2</PackageVersion>
     <Authors>Salie Jakoet</Authors>
     <Description>A source generator library for creating mockable wrappers around interfaces and abstract classes</Description>
     <PackageTags>mocking;testing;source-generator;integration-testing</PackageTags>

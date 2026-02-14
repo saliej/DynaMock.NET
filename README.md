@@ -1,12 +1,20 @@
 ﻿# DynaMock.NET
 
-A source generator library for creating mockable wrappers around interfaces and abstract classes, enabling partial mocking and seamless switching between real implementations and mocks at runtime.
+A source generator library for creating mockable wrappers around interfaces and abstract classes, enabling partial mocking and switching between real implementations and mocks at runtime.
 
 ## Important: Design Philosophy & Intended Use
 
-**This library is designed exclusively for testing scenarios and should NEVER be used in production code.**
+**This library is designed exclusively for testing scenarios and should not be used in production code.**
 
-DynaMock.NET was created to address the author's specific needs when working with complex legacy codebases that lack proper dependency injection, testability, and clean architecture. It is **not** a replacement for good design principles and programming practices, or proper testing strategies.
+DynaMock.NET was created to address my (the author) specific needs when working with complex legacy codebases that lack proper dependency injection, testability, and clean architecture. It is **not** a replacement for good design principles and programming practices, or proper testing strategies.
+
+**NB**: This package is currently considered stable for **my** needs, but certain features may be buggy, incomplete, or even be completely removed in future versions. I am not married to certain implementation and design choices and may change them for any reason, including the state of the weather on a particular day. I am also terrible at keeping documentation updated.
+
+Things that are more likely to change than others:
+- Mock registration process
+- Adding/removing mocks
+- Numerous internal implementations (e.g. interceptors)
+- Testing methodologies
 
 ### Consider using this library if:
 
@@ -22,11 +30,11 @@ DynaMock.NET was created to address the author's specific needs when working wit
 - In production/runtime code
 - As an excuse to avoid refactoring
 
-### The Right Approach
+### What you should be doing
 
-**Ideal scenario**: Your code should have proper dependency injection, clear interfaces, and be designed for testability from the start. DynaMock.NET exists for the real world where various constraints make this ideal unattainable.
+Your code should have proper dependency injection, clear interfaces, and be designed for testability from the start. DynaMock.NET exists for the real world where various constraints make this ideal unattainable.
 
-**Remember**: This library is a pragmatic tool for dealing with less-than-ideal circumstances, not a pattern to emulate in new code.
+**Remember**: This library is a pragmatic tool for dealing with less-than-ideal circumstances. It is not a pattern to emulate in new code.
 
 ## Features
 
@@ -215,7 +223,7 @@ DefaultMockProvider<T>.SetMock(mock, config => config
 
 ## Access Real Implementation
 
-Even when mocking, access the underlying real implementation:
+Access the underlying real implementation even when mocking:
 
 ```csharp
 var mockable = service as MockableBase<IWeatherService>;
