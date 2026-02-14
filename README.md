@@ -2,6 +2,11 @@
 
 A source generator library for creating mockable wrappers around interfaces and abstract classes, enabling partial mocking and switching between real implementations and mocks at runtime.
 
+[![NuGet](https://img.shields.io/nuget/v/DynaMock.svg)](https://www.nuget.org/packages/DynaMock/)
+[![Downloads](https://img.shields.io/nuget/dt/DynaMock.svg)](https://www.nuget.org/packages/DynaMock/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+
 ## Important: Design Philosophy & Intended Use
 
 **This library is designed exclusively for testing scenarios and should not be used in production code.**
